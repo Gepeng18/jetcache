@@ -248,6 +248,7 @@ public class CacheHandler implements InvocationHandler {
         }
 
         try {
+            // 定义了一个CacheLoader，就是一个加载器，主要功能是调用invokeOrigin，然后把返回结果写到context中
             CacheLoader loader = new CacheLoader() {
                 @Override
                 public Object load(Object k) throws Throwable {
@@ -261,6 +262,7 @@ public class CacheHandler implements InvocationHandler {
                     return !ExpressionUtil.evalPostCondition(context, cic.getCachedAnnoConfig());
                 }
             };
+            // 将CacheLoader缓存起来
             Object result = cache.computeIfAbsent(key, loader);
             return result;
         } catch (CacheInvokeException e) {

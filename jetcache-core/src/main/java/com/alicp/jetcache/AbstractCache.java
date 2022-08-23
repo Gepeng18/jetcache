@@ -66,6 +66,7 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
         SquashedLogger.getLogger(logger).error(sb, e);
     }
 
+    // 发送缓存事件给监控者，监控者可对缓存事件监控
     public void notify(CacheEvent e) {
         List<CacheMonitor> monitors = config().getMonitors();
         for (CacheMonitor m : monitors) {
@@ -82,6 +83,7 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
         } else {
             result = do_GET(key);
         }
+        // 异步回调
         result.future().thenRun(() -> {
             CacheGetEvent event = new CacheGetEvent(this, System.currentTimeMillis() - t, key, result);
             notify(event);
@@ -132,11 +134,17 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
         return true;
     }
 
+    /**
+     * 这个方法翻译过来是：如果值没有的话就计算。也就是缓存如果没获取到值，那我们就put一个值进去。
+     */
     static <K, V> V computeIfAbsentImpl(K key, Function<K, V> loader, boolean cacheNullWhenLoaderReturnNull,
                                                long expireAfterWrite, TimeUnit timeUnit, Cache<K, V> cache) {
+        // 强转Cache为AbstractCache类型
         AbstractCache<K, V> abstractCache = CacheUtil.getAbstractCache(cache);
+        // 使用代理模式构建一个Loader，作用是对load过程计时
         CacheLoader<K, V> newLoader = CacheUtil.createProxyLoader(cache, loader, abstractCache::notify);
         CacheGetResult<V> r;
+        // 根据cache的类型不同制定不同的获取缓存值策略，获取CacheGetResult
         if (cache instanceof RefreshCache) {
             RefreshCache<K, V> refreshCache = ((RefreshCache<K, V>) cache);
             r = refreshCache.GET(key);
@@ -144,6 +152,7 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
         } else {
             r = cache.GET(key);
         }
+        // 判断是否获取到缓存，未获取到则判断是否需要更新缓存。
         if (r.isSuccess()) {
             return r.getValue();
         } else {
@@ -158,10 +167,12 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
             };
 
             V loadedValue;
+            // 缓存穿透保护
             if (cache.config().isCachePenetrationProtect()) {
                 loadedValue = synchronizedLoad(cache.config(), abstractCache, key, newLoader, cacheUpdater);
             } else {
                 loadedValue = newLoader.apply(key);
+                // 函数式接口，消费数据
                 cacheUpdater.accept(loadedValue);
             }
 

@@ -46,6 +46,7 @@ public abstract class AbstractCacheAutoInit implements InitializingBean {
         if (!inited) {
             synchronized (this) {
                 if (!inited) {
+                    // 配置文件中的信息进行process
                     process("jetcache.local.", autoConfigureBeans.getLocalCacheBuilders(), true);
                     process("jetcache.remote.", autoConfigureBeans.getRemoteCacheBuilders(), false);
                     inited = true;

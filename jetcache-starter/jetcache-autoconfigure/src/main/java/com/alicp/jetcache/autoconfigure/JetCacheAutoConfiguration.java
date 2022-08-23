@@ -23,6 +23,7 @@ import java.util.function.Consumer;
  * Created on 2016/11/17.
  *
  * @author <a href="mailto:areyouok@gmail.com">huangli</a>
+ * 主配置类
  */
 @Configuration
 @ConditionalOnClass(GlobalCacheConfig.class)
@@ -69,6 +70,11 @@ public class JetCacheAutoConfiguration {
         return new BeanDependencyManager();
     }
 
+    /**
+     * JetCacheProperties 存储了springboot.yml中的配置信息，通过 @ConfigurationProperties(prefix = “jetcache”)注解注入属性。
+     * AutoConfigureBeans 存储了jetcache的local和remote配置，
+     * 是在AbstractCacheAutoInit类中完成注入，定义在afterPropertiesSet()方法中，这个方法是在初始化Bean时执行。
+     */
     @Bean(name = GLOBAL_CACHE_CONFIG_NAME)
     public GlobalCacheConfig globalCacheConfig(AutoConfigureBeans autoConfigureBeans, JetCacheProperties props) {
         GlobalCacheConfig _globalCacheConfig = new GlobalCacheConfig();

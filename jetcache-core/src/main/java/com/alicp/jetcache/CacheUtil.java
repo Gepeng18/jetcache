@@ -19,6 +19,10 @@ public class CacheUtil {
     private interface ProxyLoader<K, V> extends CacheLoader<K, V> {
     }
 
+    /**
+     * 这个方法使用了函数式接口的方式传递loader对象，用到了代理模式，目的是为了load消耗的时间。
+     * 使用代理模式的主要原因是为了让开发者有不同的实现，但又没必要每次都写一遍记录耗时的代码，相当于抽出了代码的公共部分。
+     */
     public static <K, V> ProxyLoader<K, V> createProxyLoader(Cache<K, V> cache,
                                                              CacheLoader<K, V> loader,
                                                              Consumer<CacheEvent> eventConsumer) {

@@ -39,9 +39,13 @@ public class CachePointcut extends StaticMethodMatcherPointcut implements ClassF
     }
 
     private boolean matchesImpl(Class clazz) {
+        // 不匹配：java、Spring、代理类
+        // 匹配：clazz的包名以basePackages开头
         if (matchesThis(clazz)) {
             return true;
         }
+
+        // 如果是一个实现类，它的接口中只要有一个能匹配上，return true
         Class[] cs = clazz.getInterfaces();
         if (cs != null) {
             for (Class c : cs) {
@@ -50,6 +54,7 @@ public class CachePointcut extends StaticMethodMatcherPointcut implements ClassF
                 }
             }
         }
+        // 如果不是接口，它的父类中只要有一个能匹配上，return true
         if (!clazz.isInterface()) {
             Class sp = clazz.getSuperclass();
             if (sp != null && matchesImpl(sp)) {
@@ -67,6 +72,9 @@ public class CachePointcut extends StaticMethodMatcherPointcut implements ClassF
         return include(name);
     }
 
+    /**
+     * 类名以 basePackages 中的包名开头，都返回ture
+     */
     private boolean include(String name) {
         if (basePackages != null) {
             for (String p : basePackages) {
@@ -78,6 +86,9 @@ public class CachePointcut extends StaticMethodMatcherPointcut implements ClassF
         return false;
     }
 
+    /**
+     * java、Spring、代理类返回ture
+     */
     private boolean exclude(String name) {
         if (name.startsWith("java")) {
             return true;

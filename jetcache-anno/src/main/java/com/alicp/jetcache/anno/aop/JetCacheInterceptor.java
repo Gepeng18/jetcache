@@ -48,9 +48,12 @@ public class JetCacheInterceptor implements MethodInterceptor, ApplicationContex
         if (configProvider != null && globalCacheConfig == null) {
             globalCacheConfig = configProvider.getGlobalCacheConfig();
         }
+        // 如果没有开启方法缓存，则直接执行原方法
         if (globalCacheConfig == null || !globalCacheConfig.isEnableMethodCache()) {
             return invocation.proceed();
         }
+
+        // cacheManager如果是null，也直接执行原方法
         if (cacheManager == null) {
             cacheManager = applicationContext.getBean(CacheManager.class);
             if (cacheManager == null) {
@@ -63,6 +66,7 @@ public class JetCacheInterceptor implements MethodInterceptor, ApplicationContex
         Object obj = invocation.getThis();
         CacheInvokeConfig cac = null;
         if (obj != null) {
+            // 生成唯一key
             String key = CachePointcut.getKey(method, obj.getClass());
             cac  = cacheConfigMap.getByMethodInfo(key);
         }
